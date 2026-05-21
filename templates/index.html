@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teste CNH Gemini</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: rgba(15, 23, 42, 0.82);
+      --panel-2: rgba(30, 41, 59, 0.9);
+      --line: rgba(148, 163, 184, 0.25);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-2: #22c55e;
+      --danger: #f87171;
+      --shadow: 0 24px 60px rgba(2, 6, 23, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.2), transparent 28%),
+        radial-gradient(circle at right top, rgba(34, 197, 94, 0.14), transparent 24%),
+        linear-gradient(180deg, #020617 0%, var(--bg) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 16px 48px;
+    }
+
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.6rem);
+      line-height: 1.02;
+      max-width: 12ch;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 68ch;
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.78));
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+    }
+
+    .card-head {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(30, 41, 59, 0.35);
+    }
+
+    .card-head h2 {
+      margin: 0 0 6px;
+      font-size: 1.15rem;
+    }
+
+    .card-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(2, 6, 23, 0.4);
+      color: var(--text);
+      padding: 14px 15px;
+      font: inherit;
+      outline: none;
+    }
+
+    textarea { min-height: 110px; resize: vertical; }
+
+    input:focus, textarea:focus {
+      border-color: rgba(56, 189, 248, 0.6);
+      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 13px 16px;
+      color: white;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    button:disabled { opacity: 0.65; cursor: wait; transform: none; }
+
+    .primary { background: linear-gradient(135deg, #0ea5e9, #38bdf8); box-shadow: 0 14px 28px rgba(14, 165, 233, 0.22); }
+    .secondary { background: linear-gradient(135deg, #16a34a, #22c55e); box-shadow: 0 14px 28px rgba(34, 197, 94, 0.18); }
+    .ghost { background: rgba(148, 163, 184, 0.15); color: var(--text); border: 1px solid var(--line); }
+
+    .result {
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(2, 6, 23, 0.42);
+      padding: 16px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 220px;
+      color: #dbeafe;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.93rem;
+      line-height: 1.55;
+    }
+
+    .hint {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--accent-2);
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+    }
+
+    @media (max-width: 920px) {
+      .grid { grid-template-columns: 1fr; }
+      .row { grid-template-columns: 1fr; }
+      body { padding: 18px 12px 34px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div class="eyebrow">Teste local da API CNH + Gemini</div>
+      <!-- <h1>Roda as rotas direto no navegador.</h1>
+      <p class="subtitle">
+        Esta página chama <strong>/exercicios</strong> para gerar questões estilo DETRAN e <strong>/chat</strong> para conversar com o tutor de CNH.
+        Use para validar o fluxo sem precisar de Postman.
+      </p>
+      <div class="status"><span class="dot"></span> Servidor local pronto para testes</div> -->
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <div class="card-head">
+          <h2>Gerar exercícios</h2>
+          <p>Envie uma quantidade entre 1 e 10.</p>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <label for="quantidade">Quantidade</label>
+            <input id="quantidade" type="number" min="1" max="10" value="3" />
+          </div>
+          <div class="actions">
+            <button class="primary" id="btnExercicios">Testar /exercicios</button>
+            <button class="ghost" id="btnExemploExercicios">Exemplo 5</button>
+          </div>
+          <div class="hint">Retorno esperado em JSON com pergunta, alternativas, resposta correta e explicação.</div>
+          <div class="result" id="resultadoExercicios">Clique no botão para gerar um teste.</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <h2>Chat do tutor</h2>
+          <p>Faça perguntas sobre CNH, prova teórica e trânsito.</p>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <label for="mensagem">Mensagem</label>
+            <textarea id="mensagem" placeholder="Ex.: Me explica placa de pare e prioridade no trânsito."></textarea>
+          </div>
+          <div class="field">
+            <label for="historico">Histórico opcional em JSON</label>
+            <textarea id="historico" placeholder='[{"role":"user","content":"Estou estudando para a prova"}]'></textarea>
+          </div>
+          <div class="actions">
+            <button class="secondary" id="btnChat">Testar /chat</button>
+            <button class="ghost" id="btnExemploChat">Mensagem exemplo</button>
+          </div>
+          <div class="hint">Você pode mandar histórico no formato usado pelo endpoint para simular uma conversa real.</div>
+          <div class="result" id="resultadoChat">A resposta do chat aparece aqui.</div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const resultadoExercicios = document.getElementById('resultadoExercicios');
+    const resultadoChat = document.getElementById('resultadoChat');
+    const btnExercicios = document.getElementById('btnExercicios');
+    const btnChat = document.getElementById('btnChat');
+
+    function formatJson(value) {
+      if (typeof value === 'string') {
+        return value;
+      }
+      return JSON.stringify(value, null, 2);
+    }
+
+    async function callApi(url, options) {
+      const response = await fetch(url, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options,
+      });
+
+      const text = await response.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (error) {
+        data = { bruto: text };
+      }
+
+      if (!response.ok) {
+        const message = data.erro || 'Erro ao chamar a API.';
+        throw new Error(message + (data.detalhe ? `\n${data.detalhe}` : ''));
+      }
+
+      return data;
+    }
+
+    btnExercicios.addEventListener('click', async () => {
+      const quantidade = Number(document.getElementById('quantidade').value);
+      btnExercicios.disabled = true;
+      resultadoExercicios.textContent = 'Gerando exercícios...';
+
+      try {
+        const data = await callApi('/exercicios', {
+          method: 'POST',
+          body: JSON.stringify({ quantidade }),
+        });
+        resultadoExercicios.textContent = formatJson(data);
+      } catch (error) {
+        resultadoExercicios.textContent = error.message;
+      } finally {
+        btnExercicios.disabled = false;
+      }
+    });
+
+    btnChat.addEventListener('click', async () => {
+      const mensagem = document.getElementById('mensagem').value.trim();
+      const historicoRaw = document.getElementById('historico').value.trim();
+      btnChat.disabled = true;
+      resultadoChat.textContent = 'Enviando mensagem...';
+
+      try {
+        const payload = { mensagem };
+        if (historicoRaw) {
+          payload.historico = JSON.parse(historicoRaw);
+        }
+        const data = await callApi('/chat', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+        resultadoChat.textContent = formatJson(data);
+      } catch (error) {
+        resultadoChat.textContent = error.message;
+      } finally {
+        btnChat.disabled = false;
+      }
+    });
+
+    document.getElementById('btnExemploExercicios').addEventListener('click', () => {
+      document.getElementById('quantidade').value = 5;
+    });
+
+    document.getElementById('btnExemploChat').addEventListener('click', () => {
+      document.getElementById('mensagem').value = 'Me explica a diferença entre placa de regulamentacao e placa de advertencia.';
+      document.getElementById('historico').value = JSON.stringify([
+        { role: 'user', content: 'Estou estudando para a prova teorica.' },
+        { role: 'model', content: 'Posso te ajudar com isso.' }
+      ], null, 2);
+    });
+  </script>
+</body>
+</html>

@@ -3,13 +3,14 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory
 import google.generativeai as genai
 
 BASE_DIR = Path(__file__).resolve().parent
 PROMPTS_DIR = BASE_DIR / "prompts"
 EXERCICIOS_PROMPT_PATH = PROMPTS_DIR / "exercicios.txt"
 CHAT_PROMPT_PATH = PROMPTS_DIR / "chat.txt"
+PLACAS_DIR = BASE_DIR / "images" / "placas"
 
 load_dotenv()
 
@@ -53,6 +54,40 @@ def extract_json(text: str):
     return json.loads(cleaned)
 
 
+def list_placas() -> list[str]:
+    if not PLACAS_DIR.exists():
+        return []
+
+    return sorted(
+        name
+        for name in os.listdir(PLACAS_DIR)
+        if name.lower().endswith(".png")
+    )
+
+
+def build_image_url(filename: str) -> str:
+    base_url = request.host_url.rstrip("/")
+    return f"{base_url}/placas/{filename}"
+
+
+def attach_image_urls(payload: dict, placas_disponiveis: set[str]) -> dict:
+    exercicios = payload.get("exercicios")
+    if not isinstance(exercicios, list):
+        return payload
+
+    for item in exercicios:
+        if not isinstance(item, dict):
+            continue
+
+        placa = (item.get("placa") or "").strip()
+        if placa in placas_disponiveis:
+            item["imagem_url"] = build_image_url(placa)
+        else:
+            item["imagem_url"] = None
+
+    return payload
+
+
 @app.post("/exercicios")
 def exercicios():
     payload = request.get_json(silent=True) or {}
@@ -61,19 +96,25 @@ def exercicios():
         quantity = parse_quantity(payload)
         base_prompt = load_prompt(EXERCICIOS_PROMPT_PATH)
         model = get_model()
+        placas_disponiveis = list_placas()
+        placas_texto = ", ".join(placas_disponiveis) if placas_disponiveis else "(nenhuma)"
         prompt = (
             f"{base_prompt}\n\n"
             f"Gere exatamente {quantity} exercicios de CNH baseados no estilo de prova do DETRAN. "
             "Retorne somente JSON valido, sem texto extra, com este formato:\n"
             "{\n"
             '  "exercicios": [\n'
-            '    {"numero": 1, "pergunta": "...", "alternativas": ["A", "B", "C", "D"], "resposta_correta": "A", "explicacao": "..."}\n'
+            '    {"numero": 1, "pergunta": "...", "alternativas": ["A", "B", "C", "D"], "resposta_correta": "A", "explicacao": "...", "placa": null}\n'
             "  ]\n"
             "}\n"
+            "Se a questao envolver uma placa de sinalizacao, preencha o campo 'placa' com o nome do arquivo. "
+            "Caso contrario, use null. Use somente um dos nomes abaixo, exatamente como listado:\n"
+            f"{placas_texto}\n"
             "As perguntas precisam ser objetivas, praticas e coerentes com CNH categoria teorica."
         )
         response = model.generate_content(prompt)
         data = extract_json(response.text)
+        data = attach_image_urls(data, set(placas_disponiveis))
         return jsonify(data)
     except ValueError as exc:
         return jsonify({"erro": str(exc)}), 400
@@ -111,6 +152,11 @@ def chat():
 @app.get("/")
 def home():
     return render_template("index.html")
+
+
+@app.get("/placas/<path:filename>")
+def placas(filename: str):
+    return send_from_directory(PLACAS_DIR, filename)
 
 if __name__ == "__main__":
     app.run(debug=True)
